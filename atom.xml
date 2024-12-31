@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <id>https://page.syjie.cc</id>
+    <title>Gridea</title>
+    <updated>2024-12-31T14:29:24.567Z</updated>
+    <generator>https://github.com/jpmonette/feed</generator>
+    <link rel="alternate" href="https://page.syjie.cc"/>
+    <link rel="self" href="https://page.syjie.cc/atom.xml"/>
+    <subtitle>温故而知新</subtitle>
+    <logo>https://page.syjie.cc/images/avatar.png</logo>
+    <icon>https://page.syjie.cc/favicon.ico</icon>
+    <rights>All rights reserved 2024, Gridea</rights>
+    <entry>
+        <title type="html"><![CDATA[Springcloud 兼容Mybitas]]></title>
+        <id>https://page.syjie.cc/post/springcloud-jian-rong-mybitas/</id>
+        <link href="https://page.syjie.cc/post/springcloud-jian-rong-mybitas/">
+        </link>
+        <updated>2024-12-31T14:26:42.000Z</updated>
+        <content type="html"><![CDATA[<h2 id="1-背景">1. 背景</h2>
+<hr>
+<h2 id="2-内容">2. 内容</h2>
+<p>在 Spring Cloud 项目中兼容 MyBatis，您可以采用 MyBatis-Plus，它是一个 MyBatis 的增强工具，在 MyBatis 的基础上只做增强不做改变，为简化开发、提高效率而生。MyBatis-Plus 提供了许多开箱即用的功能，如自动 CRUD、通用 Mapper、公共字段自动填充等。<br>
+下面是将 MyBatis-Plus 集成到 Spring Cloud 项目的步骤：</p>
+<ol>
+<li>添加依赖<br>
+在 pom.xml 文件中添加 MyBatis-Plus 的依赖。确保您使用的是与 Spring Cloud 版本兼容的 MyBatis-Plus 版本。</li>
+</ol>
+<pre><code class="language-XML">&lt;dependencies&gt;
+    &lt;!-- MyBatis Plus 核心依赖 --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.baomidou&lt;/groupId&gt;
+        &lt;artifactId&gt;mybatis-plus-boot-starter&lt;/artifactId&gt;
+        &lt;version&gt;3.5.3&lt;/version&gt; &lt;!-- 确保使用与Spring Boot版本兼容的版本 --&gt;
+    &lt;/dependency&gt;
+
+    &lt;!-- MySQL 连接器 --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;mysql&lt;/groupId&gt;
+        &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+        &lt;version&gt;8.0.26&lt;/version&gt;
+    &lt;/dependency&gt;
+
+    &lt;!-- Spring Boot Starter Data JPA 可选，用于兼容Spring Data JPA的特性 --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-data-jpa&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+
+    &lt;!-- Spring Boot Starter Web --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+
+    &lt;!-- Spring Cloud 相关依赖 --&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;org.springframework.cloud&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-cloud-starter-netflix-eureka-client&lt;/artifactId&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+</code></pre>
+<ol start="2">
+<li>配置数据库<br>
+在 application.yml 或 application.properties 文件中配置数据库连接信息。</li>
+</ol>
+<pre><code class="language-YML">spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/testdb?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=UTC
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  global-config:
+    db-config:
+      logic-delete-value: 1 # 逻辑已删除值(默认为1)
+      logic-not-delete-value: 0 # 逻辑未删除值(默认为0)
+  configuration:
+    map-underscore-to-camel-case: true
+</code></pre>
+<ol start="3">
+<li>创建实体类<br>
+创建一个简单的实体类，例如 User。</li>
+</ol>
+<pre><code class="language-JAVA">package com.example.entity;
+
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
+@Data
+@TableName(&quot;user&quot;)
+public class User {
+    @TableId
+    private Long id;
+    private String name;
+    private Integer age;
+}
+</code></pre>
+<ol start="4">
+<li>创建 Mapper 接口<br>
+创建一个继承自 BaseMapper 的 Mapper 接口。</li>
+</ol>
+<pre><code class="language-JAVA">package com.example.mapper;
+
+import com.example.entity.User;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+public interface UserMapper extends BaseMapper&lt;User&gt; {
+}
+</code></pre>
+<ol start="5">
+<li>创建 Service 接口和实现<br>
+创建 Service 接口和实现，通常使用 MyBatis-Plus 自动生成的方法。</li>
+</ol>
+<pre><code class="language-JAVA">package com.example.service;
+
+import com.example.entity.User;
+import com.baomidou.mybatisplus.extension.service.IService;
+
+public interface UserService extends IService&lt;User&gt; {
+}
+
+package com.example.service.impl;
+
+import com.example.entity.User;
+import com.example.mapper.UserMapper;
+import com.example.service.UserService;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserServiceImpl extends ServiceImpl&lt;UserMapper, User&gt; implements UserService {
+}
+</code></pre>
+<ol start="6">
+<li>创建 Controller<br>
+创建一个 REST 控制器来处理 HTTP 请求。</li>
+</ol>
+<pre><code class="language-JAVA">package com.example.controller;
+
+import com.example.entity.User;
+import com.example.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping(&quot;/users&quot;)
+public class UserController {
+
+    private final UserService userService;
+
+    @Autowired
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @PostMapping
+    public User save(@RequestBody User user) {
+        userService.save(user);
+        return user;
+    }
+}
+</code></pre>
+<ol start="7">
+<li>应用启动类<br>
+创建一个 Spring Boot 应用的启动类。</li>
+</ol>
+<pre><code class="language-JAVA">package com.example;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
+@SpringBootApplication
+@EnableDiscoveryClient
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+</code></pre>
+<p>完成上述步骤后，您就可以在 Spring Cloud 项目中使用 MyBatis-Plus 进行数据库操作了。记得根据您的实际情况调整数据库配置和实体类字段。</p>
+<hr>
+]]></content>
+    </entry>
+    <entry>
+        <title type="html"><![CDATA[Hello Gridea]]></title>
+        <id>https://page.syjie.cc/post/hello-gridea/</id>
+        <link href="https://page.syjie.cc/post/hello-gridea/">
+        </link>
+        <updated>2018-12-11T16:00:00.000Z</updated>
+        <summary type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
+✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
+]]></summary>
+        <content type="html"><![CDATA[<p>👏  欢迎使用 <strong>Gridea</strong> ！<br>
+✍️  <strong>Gridea</strong> 一个静态博客写作客户端。你可以用它来记录你的生活、心情、知识、笔记、创意... ...</p>
+<!-- more -->
+<p><a href="https://github.com/getgridea/gridea">Github</a><br>
+<a href="https://gridea.dev/">Gridea 主页</a><br>
+<a href="https://fehey.com/">示例网站</a></p>
+<h2 id="特性">特性👇</h2>
+<p>📝  你可以使用最酷的 <strong>Markdown</strong> 语法，进行快速创作</p>
+<p>🌉  你可以给文章配上精美的封面图和在文章任意位置插入图片</p>
+<p>🏷️  你可以对文章进行标签分组</p>
+<p>📋  你可以自定义菜单，甚至可以创建外部链接菜单</p>
+<p>💻  你可以在 <strong>Windows</strong>，<strong>MacOS</strong> 或 <strong>Linux</strong> 设备上使用此客户端</p>
+<p>🌎  你可以使用 <strong>𝖦𝗂𝗍𝗁𝗎𝖻 𝖯𝖺𝗀𝖾𝗌</strong> 或 <strong>Coding Pages</strong> 向世界展示，未来将支持更多平台</p>
+<p>💬  你可以进行简单的配置，接入 <a href="https://github.com/gitalk/gitalk">Gitalk</a> 或 <a href="https://github.com/SukkaW/DisqusJS">DisqusJS</a> 评论系统</p>
+<p>🇬🇧  你可以使用<strong>中文简体</strong>或<strong>英语</strong></p>
+<p>🌁  你可以任意使用应用内默认主题或任意第三方主题，强大的主题自定义能力</p>
+<p>🖥  你可以自定义源文件夹，利用 OneDrive、百度网盘、iCloud、Dropbox 等进行多设备同步</p>
+<p>🌱 当然 <strong>Gridea</strong> 还很年轻，有很多不足，但请相信，它会不停向前 🏃</p>
+<p>未来，它一定会成为你离不开的伙伴</p>
+<p>尽情发挥你的才华吧！</p>
+<p>😘 Enjoy~</p>
+]]></content>
+    </entry>
+</feed>
